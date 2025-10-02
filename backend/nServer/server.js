@@ -2,11 +2,12 @@ import express from "express";
 import multer from "multer";
 import FormData from "form-data";
 import fs from "fs";
+import axios from 'axios'
 
 const app = express();
 const upload = multer({ dest: "uploads/" });
 
-app.post("/api/transcribe", upload.single("audio"), async (req, res) => {
+app.post("/api/readaSentence", upload.single("audio"), async (req, res) => {
   try {
     const filePath = req.file.path;
 
@@ -14,12 +15,15 @@ app.post("/api/transcribe", upload.single("audio"), async (req, res) => {
     form.append("audio", fs.createReadStream(filePath));
 
     // ✅ IMPORTANT: pass headers
-    const response = await fetch("http://127.0.0.1:6000/transcribe", {
-      method: "POST",
-      body: form,
-      headers: form.getHeaders(),
-    });
-    const result = await response.json();
+    const response = await axios.post("http://127.0.0.1:6000/transcribe",
+      form,
+      {
+        headers:{
+          ...form.getHeaders(),
+        },
+      }
+    )
+    const result = await response.data;
 
     fs.unlinkSync(filePath); // delete uploaded file
 
